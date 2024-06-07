@@ -1,1 +1,3 @@
 ovos-plugin-manager
+pynput
+ovos-bus-client

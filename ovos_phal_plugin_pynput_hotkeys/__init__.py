@@ -14,20 +14,23 @@ import json
 from ovos_bus_client.message import Message
 from ovos_plugin_manager.phal import PHALPlugin
 from ovos_utils.log import LOG
+from pynput import keyboard
 
-import ovos_phal_plugin_hotkeys.keyboard as keyboard
 
 
 class HotKeysPlugin(PHALPlugin):
     """Keyboard hotkeys, define key combo to trigger listening"""
 
     def __init__(self, bus=None, config=None):
+        print("Started Plugin")
         super().__init__(bus=bus, name="ovos-PHAL-plugin-hotkeys", config=config)
         self.register_callbacks()
 
     def register_callbacks(self):
         """combos are registered independently
         NOTE: same combo can only have 1 callback (up or down)"""
+        print("This is a Configuration")
+        print(self.config.get("key_down"))
         for msg_type, key in self.config.get("key_down", {}).items():
             if isinstance(key, int):
                 continue
@@ -36,7 +39,8 @@ class HotKeysPlugin(PHALPlugin):
                 LOG.info(f"hotkey down {k} -> {m}")
                 self.bus.emit(Message(m))
 
-            keyboard.add_hotkey(key, do_emit)
+            listener = keyboard.GlobalHotKeys({key: do_emit})
+            listener.start()
 
         for msg_type, key in self.config.get("key_up", {}).items():
             if isinstance(key, int):
@@ -46,34 +50,37 @@ class HotKeysPlugin(PHALPlugin):
                 LOG.info(f"hotkey up {k} -> {m}")
                 self.bus.emit(Message(m))
 
-            keyboard.add_hotkey(key, do_emit, trigger_on_release=True)
+            listener = keyboard.GlobalHotKeys({key: do_emit})
+            listener.start()
 
     def run(self):
         self._running = True
 
-        while self._running:
-            # Wait for the next event.
-            event = keyboard.read_event()
-            ev = json.loads(event.to_json())
-            scan_code = ev["scan_code"]
+        def on_press(key):
+            try:
+                scan_code = key.vk
+            except AttributeError:
+                scan_code = key.value.vk
 
-            if event.event_type == keyboard.KEY_DOWN:
-                for msg_type, k in self.config.get("key_down", {}).items():
-                    if scan_code == k:
-                        LOG.info(f"hotkey down {scan_code} -> {msg_type}")
-                        self.bus.emit(Message(msg_type))
+            for msg_type, k in self.config.get("key_down", {}).items():
+                if scan_code == k:
+                    LOG.info(f"hotkey down {scan_code} -> {msg_type}")
+                    self.bus.emit(Message(msg_type))
 
-            if event.event_type == keyboard.KEY_UP:
-                for msg_type, k in self.config.get("key_up", {}).items():
-                    if scan_code == k:
-                        LOG.info(f"hotkey up {scan_code} -> {msg_type}")
-                        self.bus.emit(Message(msg_type))
+        def on_release(key):
+            try:
+                scan_code = key.vk
+            except AttributeError:
+                scan_code = key.value.vk
 
-            if self.config.get("debug"):
-                LOG.info(f"{event.event_type} - {ev}")
+            for msg_type, k in self.config.get("key_up", {}).items():
+                if scan_code == k:
+                    LOG.info(f"hotkey up {scan_code} -> {msg_type}")
+                    self.bus.emit(Message(msg_type))
 
+        with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
+            listener.join()
     def shutdown(self):
-        keyboard.unhook_all_hotkeys()
         super().shutdown()
 
 

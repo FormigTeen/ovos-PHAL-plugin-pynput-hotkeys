@@ -2,17 +2,16 @@
 from setuptools import setup
 
 
-PLUGIN_ENTRY_POINT = 'ovos-PHAL-plugin-hotkeys=ovos_phal_plugin_hotkeys:HotKeysPlugin'
+PLUGIN_ENTRY_POINT = 'ovos-PHAL-plugin-pynput-hotkeys=ovos_phal_plugin_pynput_hotkeys:HotKeysPlugin'
 setup(
-    name='ovos-PHAL-plugin-hotkeys',
+    name='ovos-PHAL-plugin-pynput-hotkeys',
     version='0.0.1',
     description='map keypresses to OVOS bus events',
-    url='https://github.com/OpenVoiceOS/ovos-PHAL-plugin-hotkeys',
-    author='JarbasAi',
-    author_email='jarbasai@mailfence.com',
+    url='https://github.com/FormigTeen/ovos-PHAL-plugin-pynput-hotkeys',
+    author='FormigTeen',
+    author_email='msformigteen@live.com',
     license='Apache-2.0',
-    packages=['ovos_phal_plugin_hotkeys',
-              'ovos_phal_plugin_hotkeys.keyboard'],
+    packages=['ovos_phal_plugin_pynput_hotkeys'],
     install_requires=["ovos-plugin-manager"],
     zip_safe=True,
     classifiers=[
