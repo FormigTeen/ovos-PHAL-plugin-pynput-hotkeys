@@ -22,15 +22,12 @@ class HotKeysPlugin(PHALPlugin):
     """Keyboard hotkeys, define key combo to trigger listening"""
 
     def __init__(self, bus=None, config=None):
-        print("Started Plugin")
-        super().__init__(bus=bus, name="ovos-PHAL-plugin-hotkeys", config=config)
+        super().__init__(bus=bus, name="ovos-PHAL-plugin-pynput-hotkeys", config=config)
         self.register_callbacks()
 
     def register_callbacks(self):
         """combos are registered independently
         NOTE: same combo can only have 1 callback (up or down)"""
-        print("This is a Configuration")
-        print(self.config.get("key_down"))
         for msg_type, key in self.config.get("key_down", {}).items():
             if isinstance(key, int):
                 continue
